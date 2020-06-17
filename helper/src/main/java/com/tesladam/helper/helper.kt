@@ -1,4 +1,4 @@
-package com.tesladam.helper
+package com.tesladam.navigationdeneme
 
 import android.app.Application
 import android.content.Context
@@ -16,12 +16,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.manager.RequestManagerRetriever
+import com.bumptech.glide.util.Preconditions
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import com.tesladam.helper.Singleton
 import io.github.vejei.carouselview.CarouselAdapter
 import io.github.vejei.carouselview.CarouselView
 import org.json.JSONArray
@@ -78,7 +83,7 @@ object helper : Application() {
     }
 }
 
-class helperizinAl(
+class helperIzinAl(
     private val context: Context,
     private val izin: String,
     private val function: () -> Unit
@@ -103,6 +108,21 @@ class helperizinAl(
 
                 }
             }).check()
+    }
+}
+
+object helperResimYukle{
+    fun with(context: Context): RequestManager {
+        return getRetriever(context).get(context)
+    }
+
+    private fun getRetriever(context:Context): RequestManagerRetriever {
+        Preconditions.checkNotNull(
+            context,
+            ("You cannot start a load on a not yet attached View or a Fragment where getActivity() "
+                    + "returns null (which usually occurs when getActivity() is called before the Fragment "
+                    + "is attached or after the Fragment is destroyed)."))
+        return Glide.get(context).requestManagerRetriever
     }
 }
 
