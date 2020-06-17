@@ -16,13 +16,22 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import io.github.vejei.carouselview.CarouselAdapter
 import io.github.vejei.carouselview.CarouselView
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
-object helper: Application() {
+object helper : Application() {
     @JvmStatic
     val vertical = 1
 
@@ -58,6 +67,42 @@ object helper: Application() {
             result.put(arr)
 
         return result
+    }
+
+    @JvmStatic
+    fun dateToString(stringDate: String): String {
+        val inFormat = SimpleDateFormat("yyyy-MM-dd", Locale("tr"))
+        val date = inFormat.parse(stringDate)
+        val outFormat = DateFormat.getDateInstance(DateFormat.LONG)
+        return outFormat.format(date)
+    }
+}
+
+class helperizinAl(
+    private val context: Context,
+    private val izin: String,
+    private val function: () -> Unit
+) :
+    ContextWrapper(context) {
+    init {
+        Dexter.withContext(context)
+            .withPermission(izin)
+            .withListener(object : PermissionListener {
+                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    function.invoke()
+                }
+
+                override fun onPermissionRationaleShouldBeShown(
+                    p0: PermissionRequest?,
+                    p1: PermissionToken?
+                ) {
+                    p1?.continuePermissionRequest()
+                }
+
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+
+                }
+            }).check()
     }
 }
 
@@ -141,7 +186,6 @@ class helperActivity(private val context: Context) : ContextWrapper(context) {
             Intent(this, ekran).putExtra(key, value).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         )
     }
-
 }
 
 class helperJson(private val context: Context) : ContextWrapper(context) {
