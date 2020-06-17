@@ -7,6 +7,7 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
@@ -17,9 +18,6 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestManager
-import com.bumptech.glide.manager.RequestManagerRetriever
-import com.bumptech.glide.util.Preconditions
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -111,18 +109,11 @@ class helperIzinAl(
     }
 }
 
-object helperResimYukle{
-    fun with(context: Context): RequestManager {
-        return getRetriever(context).get(context)
-    }
-
-    private fun getRetriever(context:Context): RequestManagerRetriever {
-        Preconditions.checkNotNull(
-            context,
-            ("You cannot start a load on a not yet attached View or a Fragment where getActivity() "
-                    + "returns null (which usually occurs when getActivity() is called before the Fragment "
-                    + "is attached or after the Fragment is destroyed)."))
-        return Glide.get(context).requestManagerRetriever
+class helperResimYukle(private val context: Context, private val url: String, private val img: ImageView): ContextWrapper(context) {
+    init {
+        Glide.with(context)
+            .load(url)
+            .into(img)
     }
 }
 
