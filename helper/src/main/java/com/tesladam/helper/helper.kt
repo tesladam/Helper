@@ -1,29 +1,40 @@
 package com.tesladam.navigationdeneme
 
-import android.app.Application
+import android.app.*
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.os.Build
+import android.os.StrictMode
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonArrayRequest
-import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.request.JsonArrayRequest
+import com.android.volley.request.JsonObjectRequest
+import com.android.volley.request.StringRequest
+import com.android.volley.toolbox.VolleyTickle
 import com.bumptech.glide.Glide
+import com.github.underscore.lodash.U
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import com.tesladam.helper.R
 import com.tesladam.helper.Singleton
 import io.github.vejei.carouselview.CarouselAdapter
 import io.github.vejei.carouselview.CarouselView
@@ -33,6 +44,18 @@ import org.json.JSONObject
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
+
+
+object helperBellek {
+    fun getBellek(context: Context, bellekKey: String): Any? {
+        return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
+    }
+
+    fun setBellek(context: Context, bellekKey: String, bellekValue: String) {
+        val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
+        shared.edit().putString(bellekKey, bellekValue).apply()
+    }
+}
 
 object helper : Application() {
     @JvmStatic
@@ -79,6 +102,62 @@ object helper : Application() {
         val outFormat = DateFormat.getDateInstance(DateFormat.LONG)
         return outFormat.format(date)
     }
+
+    fun logGoster(itemString: String) {
+        val maxLogSize = 1000
+        for (i in 0..itemString.length / maxLogSize) {
+            val start = i * maxLogSize
+            var end = (i + 1) * maxLogSize
+            end = if (end > itemString.length) itemString.length else end
+            Log.v("asdasd", itemString.substring(start, end))
+        }
+    }
+
+    fun sistemDil(vararg diller: String): String {
+        for (i in diller.indices)
+            if (Locale.getDefault().language == diller[i])
+                return diller[i]
+
+        return "en"
+    }
+
+    fun doluArray(jsonArray: JSONArray, key: String): JSONArray {
+        val newArray = JSONArray()
+
+        for (i in 0 until jsonArray.length()) {
+            if (jsonArray.getJSONObject(i).has(key) && jsonArray.getJSONObject(i)[key] != "") {
+                newArray.put(jsonArray.getJSONObject(i))
+            }
+        }
+
+        return newArray
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+class helperBildirim(val context: Context, val title: String, val text: String, val ekran: Class<*>) : ContextWrapper(context) {
+
+    init {
+        val channel = NotificationChannel("app", "Bildirim", NotificationManager.IMPORTANCE_DEFAULT)
+        channel.enableVibration(true)
+        channel.setShowBadge(true)
+
+        val notification = NotificationCompat.Builder(context, "app")
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setAutoCancel(true)
+            .addAction(
+                NotificationCompat.Action.Builder(R.mipmap.ic_launcher, "Git",
+                PendingIntent.getActivity(context, 0, Intent(context, ekran), 0)).build())
+            .setContentIntent(PendingIntent.getActivity(context, 0, Intent(context, ekran), 0))
+            .build()
+
+        val manager = context.getSystemService(Service.NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
+        manager.notify(18, notification)
+
+    }
 }
 
 class helperIzinAl(
@@ -95,21 +174,27 @@ class helperIzinAl(
                     function.invoke()
                 }
 
-                override fun onPermissionRationaleShouldBeShown(
-                    p0: PermissionRequest?,
-                    p1: PermissionToken?
-                ) {
+                override fun onPermissionRationaleShouldBeShown(p0: PermissionRequest?, p1: PermissionToken?) {
                     p1?.continuePermissionRequest()
                 }
 
-                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
-
-                }
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
             }).check()
     }
 }
 
-class helperResimYukle(private val context: Context, private val url: String, private val img: ImageView): ContextWrapper(context) {
+class helperInternetErisimi(val context: Context) : ContextWrapper(context) {
+    fun internetErisimi(): Boolean {
+        val conMgr = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return conMgr.activeNetworkInfo != null && conMgr.activeNetworkInfo.isAvailable && conMgr.activeNetworkInfo.isConnected
+    }
+}
+
+class helperResimYukle(
+    val context: Context,
+    val url: String,
+    val img: ImageView
+) : ContextWrapper(context) {
     init {
         Glide.with(context)
             .load(url)
@@ -202,6 +287,7 @@ class helperActivity(private val context: Context) : ContextWrapper(context) {
 class helperJson(private val context: Context) : ContextWrapper(context) {
 
     val singleton = Singleton(context)
+    val tickle = VolleyTickle.newRequestTickle(context)
 
     fun get(url: String, tur: Int, result: (Any) -> Unit) {
         if (tur == helper.array) {
@@ -217,6 +303,33 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
         }
     }
 
+    fun getSirali(url: String, result: (String) -> Unit) {
+        StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().permitAll().build())
+
+        val stringRequest = StringRequest(Request.Method.GET, url, null, null)
+        tickle.add(stringRequest)
+        val response = tickle.start()
+
+        if (response.statusCode == 200) {
+            val data = VolleyTickle.parseResponse(response)
+            result.invoke(data)
+        } else
+            Log.d("asdasd", "Helper Json getSirali Hata")
+    }
+
+    fun getXml(url: String, result: (JSONObject) -> Unit) {
+        StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().permitAll().build())
+
+        val stringRequest = StringRequest(Request.Method.GET, url, null, null)
+        tickle.add(stringRequest)
+        val response = tickle.start()
+
+        if (response.statusCode == 200) {
+            val data = VolleyTickle.parseResponse(response)
+            result.invoke(JSONObject(U.xmlToJson(data)))
+        } else
+            Log.d("asdasd", "Helper Json getXml Hata")
+    }
 }
 
 class helperSlider(private val carouselView: CarouselView) {
