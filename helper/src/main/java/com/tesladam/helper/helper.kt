@@ -47,10 +47,12 @@ import java.util.*
 
 
 object helperBellek {
+    @JvmStatic
     fun getBellek(context: Context, bellekKey: String): Any? {
         return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
     }
 
+    @JvmStatic
     fun setBellek(context: Context, bellekKey: String, bellekValue: String) {
         val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
         shared.edit().putString(bellekKey, bellekValue).apply()
@@ -103,6 +105,7 @@ object helper : Application() {
         return outFormat.format(date)
     }
 
+    @JvmStatic
     fun logGoster(itemString: String) {
         val maxLogSize = 1000
         for (i in 0..itemString.length / maxLogSize) {
@@ -113,6 +116,7 @@ object helper : Application() {
         }
     }
 
+    @JvmStatic
     fun sistemDil(vararg diller: String): String {
         for (i in diller.indices)
             if (Locale.getDefault().language == diller[i])
@@ -121,6 +125,7 @@ object helper : Application() {
         return "en"
     }
 
+    @JvmStatic
     fun doluArray(jsonArray: JSONArray, key: String): JSONArray {
         val newArray = JSONArray()
 
