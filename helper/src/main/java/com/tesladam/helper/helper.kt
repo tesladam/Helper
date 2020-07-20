@@ -364,34 +364,6 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
     }
 }
 
-class helperOneSignal(private val context: Context) : ContextWrapper(context){
-
-    init {
-        OneSignal.startInit(context)
-            .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
-            .unsubscribeWhenNotificationsAreDisabled(true)
-            .autoPromptLocation(true)
-            .init()
-        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
-    }
-
-    fun bildirim(bildirim: bildirim){
-        OneSignal.startInit(context)
-            .setNotificationOpenedHandler {
-                Log.d("asdasd", "bildirim: ${it.notification.payload?.launchURL}")
-                if (it.notification.payload.launchURL != null)
-                    bildirim.bildirim(true, it.notification.payload.launchURL.toString().split(".com/")[1])
-                else
-                    bildirim.bildirim(false, "")
-
-            }
-            .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
-            .unsubscribeWhenNotificationsAreDisabled(true)
-            .autoPromptLocation(true)
-            .init()
-    }
-}
-
 class helperPopUp(private val context: Context, private val title: String = "", private val mesaj: String = "",
                   private val positive: String = "", private val posClick: () -> Unit = {}): ContextWrapper(context){
     private val builder = AlertDialog.Builder(context)
