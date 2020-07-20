@@ -34,7 +34,6 @@ import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
-import com.onesignal.OneSignal
 import com.tesladam.helper.R
 import com.tesladam.helper.Singleton
 import io.github.vejei.carouselview.CarouselAdapter
