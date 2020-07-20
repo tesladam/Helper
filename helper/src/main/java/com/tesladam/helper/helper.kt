@@ -34,6 +34,7 @@ import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import com.onesignal.OneSignal
 import com.tesladam.helper.R
 import com.tesladam.helper.Singleton
 import io.github.vejei.carouselview.CarouselAdapter
@@ -45,19 +46,6 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-object helperBellek {
-    @JvmStatic
-    fun getBellek(context: Context, bellekKey: String): Any? {
-        return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
-    }
-
-    @JvmStatic
-    fun setBellek(context: Context, bellekKey: String, bellekValue: String) {
-        val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
-        shared.edit().putString(bellekKey, bellekValue).apply()
-    }
-}
 
 object helper : Application() {
     @JvmStatic
@@ -139,6 +127,73 @@ object helper : Application() {
     }
 }
 
+class helperActivity(private val context: Context) : ContextWrapper(context) {
+    fun degistir(ekran: Class<*>) {
+        startActivity(Intent(this, ekran))
+    }
+
+    fun degistir(ekran: Class<*>, key: String, value: String) {
+        startActivity(Intent(this, ekran).putExtra(key, value))
+    }
+
+    fun degistir(ekran: Class<*>, key: String, value: Int) {
+        startActivity(Intent(this, ekran).putExtra(key, value))
+    }
+
+    fun degistirSil(ekran: Class<*>) {
+        startActivity(
+            Intent(this, ekran).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        )
+    }
+
+    fun degistirSil(ekran: Class<*>, key: String, value: String) {
+        startActivity(
+            Intent(this, ekran).putExtra(key, value).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        )
+    }
+
+    fun degistirSil(ekran: Class<*>, key: String, value: Int) {
+        startActivity(
+            Intent(this, ekran).putExtra(key, value).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        )
+    }
+}
+
+class helperAdapterRecycler(
+    private val layout: Int,
+    private val size: Int,
+    private val function: (View, Int) -> Unit
+) : RecyclerView.Adapter<helperAdapterRecycler.ViewHolder>() {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false))
+    }
+
+    override fun getItemCount(): Int {
+        return size
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        function.invoke(holder.itemView, position)
+    }
+
+}
+
+object helperBellek {
+    @JvmStatic
+    fun getBellek(context: Context, bellekKey: String): Any? {
+        return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
+    }
+
+    @JvmStatic
+    fun setBellek(context: Context, bellekKey: String, bellekValue: String) {
+        val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
+        shared.edit().putString(bellekKey, bellekValue).apply()
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 class helperBildirim(val context: Context, val title: String, val text: String, val ekran: Class<*>) : ContextWrapper(context) {
 
@@ -154,7 +209,7 @@ class helperBildirim(val context: Context, val title: String, val text: String, 
             .setAutoCancel(true)
             .addAction(
                 NotificationCompat.Action.Builder(R.mipmap.ic_launcher, "Git",
-                PendingIntent.getActivity(context, 0, Intent(context, ekran), 0)).build())
+                    PendingIntent.getActivity(context, 0, Intent(context, ekran), 0)).build())
             .setContentIntent(PendingIntent.getActivity(context, 0, Intent(context, ekran), 0))
             .build()
 
@@ -162,48 +217,6 @@ class helperBildirim(val context: Context, val title: String, val text: String, 
         manager.createNotificationChannel(channel)
         manager.notify(18, notification)
 
-    }
-}
-
-class helperIzinAl(
-    private val context: Context,
-    private val izin: String,
-    private val function: () -> Unit
-) :
-    ContextWrapper(context) {
-    init {
-        Dexter.withContext(context)
-            .withPermission(izin)
-            .withListener(object : PermissionListener {
-                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-                    function.invoke()
-                }
-
-                override fun onPermissionRationaleShouldBeShown(p0: PermissionRequest?, p1: PermissionToken?) {
-                    p1?.continuePermissionRequest()
-                }
-
-                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
-            }).check()
-    }
-}
-
-class helperInternetErisimi(val context: Context) : ContextWrapper(context) {
-    fun internetErisimi(): Boolean {
-        val conMgr = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return conMgr.activeNetworkInfo != null && conMgr.activeNetworkInfo.isAvailable && conMgr.activeNetworkInfo.isConnected
-    }
-}
-
-class helperResimYukle(
-    val context: Context,
-    val url: String,
-    val img: ImageView
-) : ContextWrapper(context) {
-    init {
-        Glide.with(context)
-            .load(url)
-            .into(img)
     }
 }
 
@@ -256,36 +269,32 @@ object helperFragment {
     }
 }
 
-class helperActivity(private val context: Context) : ContextWrapper(context) {
-    fun degistir(ekran: Class<*>) {
-        startActivity(Intent(this, ekran))
+class helperInternetErisimi(val context: Context) : ContextWrapper(context) {
+    fun internetErisimi(): Boolean {
+        val conMgr = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return conMgr.activeNetworkInfo != null && conMgr.activeNetworkInfo.isAvailable && conMgr.activeNetworkInfo.isConnected
     }
+}
 
-    fun degistir(ekran: Class<*>, key: String, value: String) {
-        startActivity(Intent(this, ekran).putExtra(key, value))
-    }
+class helperIzinAl(
+    private val context: Context,
+    private val izin: String,
+    private val function: () -> Unit
+) : ContextWrapper(context) {
+    init {
+        Dexter.withContext(context)
+            .withPermission(izin)
+            .withListener(object : PermissionListener {
+                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    function.invoke()
+                }
 
-    fun degistir(ekran: Class<*>, key: String, value: Int) {
-        startActivity(Intent(this, ekran).putExtra(key, value))
-    }
+                override fun onPermissionRationaleShouldBeShown(p0: PermissionRequest?, p1: PermissionToken?) {
+                    p1?.continuePermissionRequest()
+                }
 
-    fun degistirSil(ekran: Class<*>) {
-        startActivity(
-            Intent(this, ekran).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        )
-    }
-
-    fun degistirSil(ekran: Class<*>, key: String, value: String) {
-        startActivity(
-            Intent(this, ekran).putExtra(key, value).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        )
-    }
-
-    fun degistirSil(ekran: Class<*>, key: String, value: Int) {
-        startActivity(
-            Intent(this, ekran).putExtra(key, value).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        )
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
+            }).check()
     }
 }
 
@@ -335,6 +344,86 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
         } else
             Log.d("asdasd", "Helper Json getXml Hata")
     }
+
+    fun post( url: String, postKey: HashMap<String, String>,  result: (String) -> Unit ){
+
+        val request = object : StringRequest(Method.POST, url, Response.Listener {
+            result.invoke(it)
+        }, Response.ErrorListener {
+            Log.d("asdasd", "post: $it")
+            result.invoke("gönderilemedi")
+        }){
+            override fun getParams(): MutableMap<String, String> {
+                super.getParams()
+                Log.d("asdasd", "getParams: $postKey")
+                return postKey
+            }
+        }
+
+        singleton.addToRequestQueue(request)
+    }
+}
+
+class helperOneSignal(private val context: Context) : ContextWrapper(context){
+
+    init {
+        OneSignal.startInit(context)
+            .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+            .unsubscribeWhenNotificationsAreDisabled(true)
+            .autoPromptLocation(true)
+            .init()
+        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
+    }
+
+    fun bildirim(bildirim: bildirim){
+        OneSignal.startInit(context)
+            .setNotificationOpenedHandler {
+                Log.d("asdasd", "bildirim: ${it.notification.payload?.launchURL}")
+                if (it.notification.payload.launchURL != null)
+                    bildirim.bildirim(true, it.notification.payload.launchURL.toString().split(".com/")[1])
+                else
+                    bildirim.bildirim(false, "")
+
+            }
+            .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+            .unsubscribeWhenNotificationsAreDisabled(true)
+            .autoPromptLocation(true)
+            .init()
+    }
+}
+
+class helperPopUp(private val context: Context, private val title: String = "", private val mesaj: String = "",
+                  private val positive: String = "", private val posClick: () -> Unit = {}): ContextWrapper(context){
+    private val builder = AlertDialog.Builder(context)
+
+    init {
+        if (mesaj.isNotEmpty())
+            builder.setMessage(mesaj)
+
+        if (title.isNotEmpty())
+            builder.setTitle(title)
+
+        if (positive.isNotEmpty())
+            builder.setPositiveButton(positive) { _, _ ->  posClick.invoke() }
+
+        builder.create()
+    }
+
+    fun show(): AlertDialog { return builder.show()!!}
+    fun get(): AlertDialog { return builder.create()!!}
+    fun view(view: View): helperPopUp { builder.setView(view); return this }
+}
+
+class helperResimYukle(
+    val context: Context,
+    val url: String,
+    val img: ImageView
+) : ContextWrapper(context) {
+    init {
+        Glide.with(context)
+            .load(url)
+            .into(img)
+    }
 }
 
 class helperSlider(private val carouselView: CarouselView) {
@@ -364,12 +453,13 @@ class helperSlider(private val carouselView: CarouselView) {
     }
 }
 
+
+
 class adapterSlider(
     private val layout: Int,
     private val size: Int,
     private val function: (View, Int) -> Unit
-) :
-    CarouselAdapter<adapterSlider.ViewHolder>() {
+) : CarouselAdapter<adapterSlider.ViewHolder>() {
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     override fun onCreatePageViewHolder(
@@ -387,4 +477,15 @@ class adapterSlider(
         function.invoke(holder.itemView, position)
     }
 
+}
+
+
+
+interface dinle {
+    fun indiriliyor(yüzde: Double)
+    fun bitti(bitti: Boolean)
+}
+
+interface bildirim{
+    fun bildirim(geldi: Boolean, data: String)
 }
