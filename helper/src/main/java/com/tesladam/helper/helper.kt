@@ -383,7 +383,7 @@ class helperPopUp(private val context: Context, private val title: String = "", 
             builder.setNegativeButton(negative) { _, _ -> negaClick.invoke() }
 
         if (natural.isNotEmpty())
-            builder.setNegativeButton(natural) { _, _ -> natuClick.invoke() }
+            builder.setNeutralButton(natural) { _, _ -> natuClick.invoke() }
 
         builder.create()
     }
