@@ -364,7 +364,9 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
 }
 
 class helperPopUp(private val context: Context, private val title: String = "", private val mesaj: String = "",
-                  private val positive: String = "", private val posClick: () -> Unit = {}, private val negative: String = "", private val negaClick: () -> Unit = {}): ContextWrapper(context){
+                  private val positive: String = "", private val posClick: () -> Unit = {},
+                  private val negative: String = "", private val negaClick: () -> Unit = {},
+                  private val natural: String = "", private val natuClick: () -> Unit = {}): ContextWrapper(context){
     private val builder = AlertDialog.Builder(context)
 
     init {
@@ -379,6 +381,9 @@ class helperPopUp(private val context: Context, private val title: String = "", 
 
         if (negative.isNotEmpty())
             builder.setNegativeButton(negative) { _, _ -> negaClick.invoke() }
+
+        if (natural.isNotEmpty())
+            builder.setNegativeButton(natural) { _, _ -> natuClick.invoke() }
 
         builder.create()
     }
