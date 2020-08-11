@@ -298,11 +298,9 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
                 guvenlik = sonuc.getInt("status") == 1
 
                 //Version Kontrollü
-                if (guvenlik!!){
                     if (sonuc.getInt("version_status") != -1 && sonuc.getInt("version_status") == 1 &&
                         sonuc.getString("version") != "-1" && BuildConfig.VERSION_NAME != sonuc.getString("version")){
 
-                        guvenlik = false
                         val diller = sonuc.getString("version_lang").split(",")
                         var dil = ""
 
@@ -321,8 +319,8 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
                             //startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.veryansintv.app")))
                         }).show()
+                        guvenlik = false
                     }
-                }
 
             }
         }
