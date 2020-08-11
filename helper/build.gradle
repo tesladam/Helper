@@ -38,7 +38,6 @@ dependencies {
     implementation 'com.github.javadev:underscore:1.55'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'io.github.vejei.carouselview:carouselview:1.0.0-alpha'
-    implementation 'io.github.vejei.viewpagerindicator:viewpagerindicator:1.0.0-alpha.1'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.2.2'
     implementation 'com.github.jama5262:CarouselView:1.1.0'
     implementation 'com.github.f0ris.sweetalert:library:1.5.1'

@@ -298,8 +298,9 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
                 guvenlik = sonuc.getInt("status") == 1
 
                 //Version Kontrollü
+                if (guvenlik!!){
                     if (sonuc.getInt("version_status") != -1 && sonuc.getInt("version_status") == 1 &&
-                        sonuc.getString("version") != "-1" && BuildConfig.VERSION_NAME != sonuc.getString("version")){
+                        sonuc.getString("version") != "-1" && sonuc.getString("version") != context.packageManager.getPackageInfo(packageName, 0).versionName){
 
                         val diller = sonuc.getString("version_lang").split(",")
                         var dil = ""
@@ -321,6 +322,7 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
                         }).show()
                         guvenlik = false
                     }
+                }
 
             }
         }

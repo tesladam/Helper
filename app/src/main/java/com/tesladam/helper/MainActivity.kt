@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        Log.d(TAG, "onCreate: ${BuildConfig.VERSION_NAME}")
         helperJson(this).get("https://tesladam.herokuapp.com/res/$packageName", helper.obje){
             Log.d(TAG, "onCreate: $it")
         }
