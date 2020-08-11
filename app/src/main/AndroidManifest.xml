@@ -4,7 +4,6 @@
     package="com.tesladam.helper">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="29" tools:ignore="GradleOverrides" />
 
     <application
         android:allowBackup="true"
