@@ -291,7 +291,7 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
         json.singleton.requestQueue?.cache?.clear()
 
         if (helperInternetErisimi(applicationContext).internetErisimi()){
-            json.getSirali("https://tesladam.herokuapp.com/res/com.destekweb.tsc"){
+            json.getSirali("https://tesladam.herokuapp.com/res/$packageName"){
                 val sonuc = JSONObject(it)
 
                 //Uygulama Güvenliği
