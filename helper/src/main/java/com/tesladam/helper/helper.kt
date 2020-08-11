@@ -302,6 +302,7 @@ class helperGuvenlik(private val context: Context) : ContextWrapper(context){
                     if (sonuc.getInt("version_status") != -1 && sonuc.getInt("version_status") == 1 &&
                         sonuc.getString("version") != "-1" && BuildConfig.VERSION_NAME != sonuc.getString("version")){
 
+                        guvenlik = false
                         val diller = sonuc.getString("version_lang").split(",")
                         var dil = ""
 
