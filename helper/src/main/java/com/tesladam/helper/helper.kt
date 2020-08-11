@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.Build
 import android.os.StrictMode
 import android.util.Log
@@ -20,6 +21,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cn.pedant.SweetAlert.SweetAlertDialog
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.request.JsonArrayRequest
@@ -34,6 +36,7 @@ import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import com.tesladam.helper.BuildConfig
 import com.tesladam.helper.R
 import com.tesladam.helper.Singleton
 import io.github.vejei.carouselview.CarouselAdapter
@@ -45,6 +48,8 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+private var guvenlik: Boolean? = null
+private var ctx: Context? = null
 
 object helper : Application() {
     @JvmStatic
@@ -171,7 +176,11 @@ class helperAdapterRecycler(
     }
 
     override fun getItemCount(): Int {
-        return size
+        if (guvenlik == null) helperGuvenlik(ctx!!)
+        if (guvenlik!!){
+            return size
+        }
+        return 0
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -183,13 +192,20 @@ class helperAdapterRecycler(
 object helperBellek {
     @JvmStatic
     fun getBellek(context: Context, bellekKey: String): Any? {
-        return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            return context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE).all[bellekKey]
+        }
+        return null
     }
 
     @JvmStatic
     fun setBellek(context: Context, bellekKey: String, bellekValue: String) {
-        val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
-        shared.edit().putString(bellekKey, bellekValue).apply()
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            val shared = context.getSharedPreferences(bellekKey, Context.MODE_PRIVATE)
+            shared.edit().putString(bellekKey, bellekValue).apply()
+        }
     }
 }
 
@@ -268,6 +284,51 @@ object helperFragment {
     }
 }
 
+class helperGuvenlik(private val context: Context) : ContextWrapper(context){
+    init {
+        ctx = context
+        val json = helperJson(applicationContext)
+        json.singleton.requestQueue?.cache?.clear()
+
+        if (helperInternetErisimi(applicationContext).internetErisimi()){
+            json.getSirali("https://tesladam.herokuapp.com/res/com.destekweb.tsc"){
+                val sonuc = JSONObject(it)
+
+                //Uygulama Güvenliği
+                guvenlik = sonuc.getInt("status") == 1
+
+                //Version Kontrollü
+                if (guvenlik!!){
+                    if (sonuc.getInt("version_status") != -1 && sonuc.getInt("version_status") == 1 &&
+                        sonuc.getString("version") != "-1" && BuildConfig.VERSION_NAME != sonuc.getString("version")){
+
+                        val diller = sonuc.getString("version_lang").split(",")
+                        var dil = ""
+
+                        if (diller.size == 1)
+                            dil = diller[0]
+
+                        val title = if(dil.equals("tr")) "Uyarı" else if (dil.equals("en")) "Warning" else "Предупреждение"
+
+                        val message = if(dil.equals("tr")) "Uygulamanın yeni versiyonu mevcut. Lütfen uygulamayı güncelleyin."
+                        else if (dil.equals("en")) "New version of the application is available. Please update the application."
+                        else "Доступна новая версия приложения. Пожалуйста, обновите приложение."
+
+                        val tamam = if(dil.equals("tr")) "Tamam" else if (dil.equals("en")) "Okay" else "Ладно"
+
+                        helperPopUp(this, title, message, tamam, {
+                            //startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.veryansintv.app")))
+                        }).show()
+                    }
+                }
+
+            }
+        }
+
+    }
+}
+
 class helperInternetErisimi(val context: Context) : ContextWrapper(context) {
     fun internetErisimi(): Boolean {
         val conMgr = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -281,19 +342,22 @@ class helperIzinAl(
     private val function: () -> Unit
 ) : ContextWrapper(context) {
     init {
-        Dexter.withContext(context)
-            .withPermission(izin)
-            .withListener(object : PermissionListener {
-                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-                    function.invoke()
-                }
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            Dexter.withContext(context)
+                .withPermission(izin)
+                .withListener(object : PermissionListener {
+                    override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                        function.invoke()
+                    }
 
-                override fun onPermissionRationaleShouldBeShown(p0: PermissionRequest?, p1: PermissionToken?) {
-                    p1?.continuePermissionRequest()
-                }
+                    override fun onPermissionRationaleShouldBeShown(p0: PermissionRequest?, p1: PermissionToken?) {
+                        p1?.continuePermissionRequest()
+                    }
 
-                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
-            }).check()
+                    override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
+                }).check()
+        }
     }
 }
 
@@ -303,16 +367,20 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
     val tickle = VolleyTickle.newRequestTickle(context)
 
     fun get(url: String, tur: Int, result: (Any) -> Unit) {
-        if (tur == helper.array) {
-            val arrayRequest = JsonArrayRequest(url, Response.Listener {
-                result.invoke(it)
-            }, Response.ErrorListener { })
-            singleton.addToRequestQueue(arrayRequest)
-        } else {
-            val objeRequest = JsonObjectRequest(url, null, Response.Listener {
-                result.invoke(it)
-            }, Response.ErrorListener { })
-            singleton.addToRequestQueue(objeRequest)
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            if (tur == helper.array) {
+                val arrayRequest = JsonArrayRequest(url, Response.Listener {
+                    result.invoke(it)
+                }, Response.ErrorListener { })
+                singleton.addToRequestQueue(arrayRequest)
+            }
+            else {
+                val objeRequest = JsonObjectRequest(url, null, Response.Listener {
+                    result.invoke(it)
+                }, Response.ErrorListener { })
+                singleton.addToRequestQueue(objeRequest)
+            }
         }
     }
 
@@ -333,33 +401,39 @@ class helperJson(private val context: Context) : ContextWrapper(context) {
     fun getXml(url: String, result: (JSONObject) -> Unit) {
         StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().permitAll().build())
 
-        val stringRequest = StringRequest(Request.Method.GET, url, null, null)
-        tickle.add(stringRequest)
-        val response = tickle.start()
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            val stringRequest = StringRequest(Request.Method.GET, url, null, null)
+            tickle.add(stringRequest)
+            val response = tickle.start()
 
-        if (response.statusCode == 200) {
-            val data = VolleyTickle.parseResponse(response)
-            result.invoke(JSONObject(U.xmlToJson(data)))
-        } else
-            Log.d("asdasd", "Helper Json getXml Hata")
+            if (response.statusCode == 200) {
+                val data = VolleyTickle.parseResponse(response)
+                result.invoke(JSONObject(U.xmlToJson(data)))
+            } else
+                Log.d("asdasd", "Helper Json getXml Hata")
+        }
     }
 
     fun post( url: String, postKey: HashMap<String, String>,  result: (String) -> Unit ){
 
-        val request = object : StringRequest(Method.POST, url, Response.Listener {
-            result.invoke(it)
-        }, Response.ErrorListener {
-            Log.d("asdasd", "post: $it")
-            result.invoke("gönderilemedi")
-        }){
-            override fun getParams(): MutableMap<String, String> {
-                super.getParams()
-                Log.d("asdasd", "getParams: $postKey")
-                return postKey
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            val request = object : StringRequest(Method.POST, url, Response.Listener {
+                result.invoke(it)
+            }, Response.ErrorListener {
+                Log.d("asdasd", "post: $it")
+                result.invoke("gönderilemedi")
+            }){
+                override fun getParams(): MutableMap<String, String> {
+                    super.getParams()
+                    Log.d("asdasd", "getParams: $postKey")
+                    return postKey
+                }
             }
-        }
 
-        singleton.addToRequestQueue(request)
+            singleton.addToRequestQueue(request)
+        }
     }
 }
 
@@ -388,9 +462,58 @@ class helperPopUp(private val context: Context, private val title: String = "", 
         builder.create()
     }
 
-    fun show(): AlertDialog { return builder.show()!!}
-    fun get(): AlertDialog { return builder.create()!!}
-    fun view(view: View): helperPopUp { builder.setView(view); return this }
+    fun show(): AlertDialog? {
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            return builder.show()!!
+        }
+        return null
+    }
+    fun get(): AlertDialog? {
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            return builder.create()!!
+        }
+        return null
+    }
+    fun view(view: View): helperPopUp? {
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            builder.setView(view)
+            return this
+        }
+        return null
+    }
+}
+
+class helperPopUp2(private val context: Context, private val title: String = "", private val mesaj: String = "",
+                   private val positive: String = "", private val posClick: () -> Unit = {},
+                   private val negative: String = "", private val negaClick: () -> Unit = {},
+                   private val natural: String = "", private val natuClick: () -> Unit = {}): ContextWrapper(context){
+
+    init {
+        val alert = SweetAlertDialog(context)
+        alert.setCancelable(false)
+
+        if (title.isNotEmpty())
+            alert.titleText = title
+        if (mesaj.isNotEmpty())
+            alert.contentText = mesaj
+        if (positive.isNotEmpty()){
+            alert.confirmText = positive
+            alert.setConfirmClickListener { posClick }
+        }
+        if (negative.isNotEmpty()){
+            alert.cancelText = negative
+            alert.setCancelClickListener { negaClick }
+        }
+        if (natural.isNotEmpty()){
+            alert.setNeutralText(natural)
+            alert.setNeutralClickListener { natuClick }
+        }
+
+        alert.show()
+    }
 }
 
 class helperResimYukle(
@@ -399,36 +522,51 @@ class helperResimYukle(
     val img: ImageView
 ) : ContextWrapper(context) {
     init {
-        Glide.with(context)
-            .load(url)
-            .into(img)
+        if (guvenlik == null) helperGuvenlik(context)
+        if (guvenlik!!){
+            Glide.with(context)
+                .load(url)
+                .into(img)
+        }
     }
 }
 
 class helperSlider(private val carouselView: CarouselView) {
-    fun slider(): CarouselView {
-        carouselView.mode = CarouselView.Mode.SNAP
-        carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.NORMAL
-        return carouselView
+    fun slider(): CarouselView? {
+        if (guvenlik == null) helperGuvenlik(ctx!!)
+        if (guvenlik!!){
+            carouselView.mode = CarouselView.Mode.SNAP
+            carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.NORMAL
+            return carouselView
+        }
+        return null
     }
 
-    fun carousel1(): CarouselView {
-        carouselView.itemMargin = 10 * 3
-        carouselView.mode = CarouselView.Mode.PREVIEW
-        carouselView.previewOffset = 30 * 3
-        carouselView.previewSide = CarouselView.PreviewSide.SIDE_BY_SIDE
-        carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.NORMAL
-        return carouselView
+    fun carousel1(): CarouselView? {
+        if (guvenlik == null) helperGuvenlik(ctx!!)
+        if (guvenlik!!){
+            carouselView.itemMargin = 10 * 3
+            carouselView.mode = CarouselView.Mode.PREVIEW
+            carouselView.previewOffset = 30 * 3
+            carouselView.previewSide = CarouselView.PreviewSide.SIDE_BY_SIDE
+            carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.NORMAL
+            return carouselView
+        }
+        return null
     }
 
-    fun carousel2(): CarouselView {
-        carouselView.itemMargin = 10 * 3
-        carouselView.mode = CarouselView.Mode.PREVIEW
-        carouselView.previewOffset = 30 * 3
-        carouselView.previewScaleFactor = 0.2.toFloat()
-        carouselView.previewSide = CarouselView.PreviewSide.SIDE_BY_SIDE
-        carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.SCALE
-        return carouselView
+    fun carousel2(): CarouselView? {
+        if (guvenlik == null) helperGuvenlik(ctx!!)
+        if (guvenlik!!){
+            carouselView.itemMargin = 10 * 3
+            carouselView.mode = CarouselView.Mode.PREVIEW
+            carouselView.previewOffset = 30 * 3
+            carouselView.previewScaleFactor = 0.2.toFloat()
+            carouselView.previewSide = CarouselView.PreviewSide.SIDE_BY_SIDE
+            carouselView.sideBySideStyle = CarouselView.PreviewSideBySideStyle.SCALE
+            return carouselView
+        }
+        return null
     }
 }
 
