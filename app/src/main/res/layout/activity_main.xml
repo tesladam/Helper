@@ -6,4 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <com.tesladam.helper.Carouselview.CarouselView
+        android:id="@+id/carousel"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.tesladam.helper.Indicator.indicator.CircleIndicator
+        android:id="@+id/indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:indicatorColor2="@android:color/darker_gray"
+        app:indicatorGap2="5dp"
+        app:indicatorRadius2="5dp"
+        app:indicatorSelectedColor2="@color/colorAccent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/carousel" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

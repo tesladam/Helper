@@ -1,10 +1,9 @@
 package com.tesladam.helper
 
 import android.content.Context
-import com.android.volley.Request
-import com.android.volley.RequestQueue
-import com.android.volley.toolbox.Volley
-import com.tesladam.navigationdeneme.helperResimYukle
+import com.tesladam.helper.Volley.Request
+import com.tesladam.helper.Volley.RequestQueue
+import com.tesladam.helper.Volley.Volley
 
 class Singleton(context: Context) {
 

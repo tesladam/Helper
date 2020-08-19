@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="glide_custom_view_target_tag" type="id"/>
+
+    <declare-styleable name="CarouselView">
+        <attr name="carouselMode" format="enum">
+            <enum name="snap" value="0" />
+            <enum name="preview" value="1" />
+        </attr>
+        <attr name="carouselPreviewSide" format="enum">
+            <enum name="sides" value="0" />
+            <enum name="right" value="1" />
+        </attr>
+        <attr name="carouselPreviewSideBySideStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="scale" value="1" />
+        </attr>
+        <attr name="carouselPreviewScaleFactor" format="float" />
+        <attr name="carouselPreviewOffset" format="dimension" />
+        <attr name="carouselMargin" format="dimension" />
+    </declare-styleable>
+
+    <attr name="indicatorColor2" format="color"/>
+    <attr name="indicatorSelectedColor2" format="color"/>
+    <attr name="indicatorGap2" format="dimension"/>
+    <attr name="indicatorItemCount2" format="integer"/>
+    <attr name="indicatorCornerRadius2" format="dimension"/>
+
+    <declare-styleable name="CircleIndicator2">
+        <attr name="indicatorColor2"/>
+        <attr name="indicatorSelectedColor2"/>
+        <attr name="indicatorGap2"/>
+        <attr name="indicatorRadius2" format="dimension"/>
+        <attr name="indicatorItemCount2"/>
+    </declare-styleable>
+
+    <declare-styleable name="RectIndicator2">
+        <attr name="indicatorColor2"/>
+        <attr name="indicatorSelectedColor2"/>
+        <attr name="indicatorGap2"/>
+        <attr name="indicatorItemCount2"/>
+        <attr name="indicatorCornerRadius2"/>
+        <attr name="indicatorWidth2" format="dimension"/>
+        <attr name="indicatorHeight2" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="RoundedImageView">
+        <attr name="cornerRadius" format="dimension" />
+        <attr name="reverseMask" format="boolean" />
+        <attr name="roundedCorners">
+            <flag name="topLeft" value="8" />
+            <flag name="topRight" value="4" />
+            <flag name="bottomLeft" value="2" />
+            <flag name="bottomRight" value="1" />
+            <flag name="top" value="12" />
+            <flag name="bottom" value="3" />
+            <flag name="all" value="15" />
+        </attr>
+    </declare-styleable>
+</resources>
