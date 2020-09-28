@@ -17,11 +17,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -44,5 +40,4 @@ dependencies {
     implementation 'io.github.vejei.carouselview:carouselview:1.0.0-alpha'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.2.2'
     implementation 'com.github.jama5262:CarouselView:1.1.0'
-    implementation 'com.github.f0ris.sweetalert:library:1.5.1'
 }

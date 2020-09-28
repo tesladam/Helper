@@ -1,1 +1,0 @@
-# Helper  ![CI](https://github.com/tesladam/Helper/workflows/CI/badge.svg) [![Build Status](https://travis-ci.com/tesladam/Helper.svg?branch=master)](https://travis-ci.com/tesladam/Helper) [![](https://jitpack.io/v/tesladam/Helper.svg)](https://jitpack.io/#tesladam/Helper)
